@@ -13,20 +13,28 @@ export class InsertBuilder implements IInsertBuilder, IExecutable<string> {
   }
 
   private insert(values: Record<string, any>[]) {
-    this.value += `INSERT INTO ${this.table} VALUES`;
-
+    const keys = Array.from(
+      new Set(values.map((value) => Object.keys(value)).flat())
+    );
+    const formattedKeys = "(" + keys.join(", ") + ")";
+    this.value += `INSERT INTO ${this.table} ${formattedKeys}  VALUES `;
     for (let index in values) {
-      const value = values[index];
       this.value += "(";
 
-      this.value += Object.values(value as Object)
-        .map((v) => String(v))
-        .join(", ");
+      const value = values[index];
+      let formattedValues = "";
+      for (let keyIndex in keys) {
+        const key = keys[keyIndex];
+        this.value += value[key] || "NULL";
 
-      if (+index !== values.length -1 ) this.value += ",";
+        if (+keyIndex !== keys.length - 1) this.value += ", ";
+        this.value += formattedValues;
+      }
+
+      this.value += ")";
+      if (+index !== values.length - 1) this.value += ", ";
     }
 
-    this.value += ")";
   }
 
   exec(): string {
@@ -35,3 +43,5 @@ export class InsertBuilder implements IInsertBuilder, IExecutable<string> {
     return this.value;
   }
 }
+
+const a = [].reduce((keys) => keys, [] as string[]);
